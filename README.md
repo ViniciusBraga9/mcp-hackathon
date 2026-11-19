@@ -69,7 +69,3 @@ A proposta é eliminar a dependência de buscas manuais e permitir que qualquer 
 - Indexação e catalogação de arquivos
 - Busca textual e, opcionalmente, busca semântica
 - Integração com assistentes de Inteligência Artificial
-
----
-
-**Encontra.ai — A informação está nos arquivos. A IA sabe onde procurar.**
