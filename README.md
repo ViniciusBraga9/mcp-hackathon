@@ -1,146 +1,217 @@
 
-# Seus arquivos, encontrados fácilmente
+## Repesquisa MCP
 
-**Menos tempo procurando. Mais tempo encontrando.**
+**Encontre seus arquivos conversando com uma IA.**
 
-O projeto é um servidor MCP (Model Context Protocol) desenvolvido para conectar assistentes de Inteligência Artificial a um indexador de arquivos.
+O Repesquisa é um servidor MCP local, desenvolvido em Python, que permite a assistentes de IA pesquisar arquivos em diretórios autorizados do computador.
 
-Com ele, é possível encontrar documentos, imagens, planilhas, PDFs e outros arquivos utilizando perguntas em linguagem natural, sem precisar conhecer seus nomes exatos ou navegar manualmente por diversas pastas.
+A proposta é simplificar a localização de documentos por meio de perguntas em linguagem natural, sem precisar lembrar o nome exato do arquivo ou em qual pasta ele foi salvo.
 
-**Exemplos de perguntas:**
+Nesta versão inicial, a busca considera principalmente o nome e o caminho dos arquivos. A pesquisa dentro do conteúdo de PDFs, planilhas e documentos será adicionada em etapas futuras.
 
-- "Encontre o PDF que contém o relatório financeiro de 2025."
-- "Procure uma planilha com dados de vendas."
-- "Onde está o documento que fala sobre projetos de infraestrutura?"
-- "Encontre arquivos relacionados ao contrato da empresa."
-- "Quais documentos foram modificados recentemente?"
-- "Existe algum arquivo que menciona o nome de determinado cliente?"
+## Propósito
 
-## Como funciona?
+Transformar a maneira como as pessoas encontram seus arquivos.
 
-O funcionamento é dividido em quatro etapas:
+Em vez de navegar manualmente por centenas ou milhares de documentos, o usuário pode simplesmente perguntar à IA o que está procurando.
 
-1. **Indexação:** o sistema analisa os diretórios autorizados e registra informações dos arquivos.
-2. **Organização:** os arquivos são catalogados por nome, extensão, localização, data e, quando habilitado, conteúdo.
-3. **Busca inteligente:** o servidor MCP disponibiliza ferramentas para que a IA pesquise os arquivos de acordo com as perguntas do usuário.
-4. **Resultado:** a IA apresenta os arquivos encontrados, seus caminhos e informações relevantes para facilitar a identificação.
+**Você pergunta. O Repesquisa encontra.**
 
-## Principais funcionalidades
+## Exemplos de utilização
 
-- Pesquisa de arquivos por linguagem natural.
-- Busca por nome, extensão e conteúdo.
-- Localização de documentos em diferentes diretórios.
-- Filtragem por tipo e data de modificação.
-- Exibição do caminho completo dos arquivos.
-- Apresentação de trechos relevantes para contextualizar os resultados.
-- Atualização do índice para reconhecer novos arquivos.
+- "Encontre o relatório financeiro de 2025."
+- "Procure planilhas Excel na pasta Downloads."
+- "Onde está aquele contrato de prestação de serviços?"
+- "Encontre arquivos relacionados a projetos de infraestrutura."
+- "Mostre os documentos modificados recentemente."
+- "Qual é o caminho completo do arquivo encontrado?"
 
-O projeto utiliza o Model Context Protocol (MCP) para disponibilizar as funcionalidades do indexador aos assistentes de IA compatíveis.
+## O que esta versão faz
 
-A IA pode utilizar ferramentas como:
+- Indexa arquivos de diretórios autorizados.
+- Registra nome, caminho, extensão, tamanho e data de modificação em um banco SQLite local.
+- Pesquisa por palavras presentes no nome e no caminho.
+- Consulta metadados de um arquivo.
+- Mostra a árvore de diretórios.
+- Atualiza o índice quando solicitado.
 
-| Ferramenta | Finalidade |
+## Compatibilidade com assistentes de IA
+
+O Repesquisa utiliza o Model Context Protocol (MCP), permitindo sua integração com clientes de IA compatíveis.
+
+### Claude Desktop
+
+O Repesquisa pode ser utilizado com o **Claude Desktop**, por meio de um servidor MCP local.
+
+A conexão é realizada através do arquivo `claude_desktop_config.json`, permitindo que o Claude utilize as ferramentas de pesquisa disponibilizadas pelo Repesquisa.
+
+**Não é necessária uma API Key da OpenAI ou da Anthropic para essa integração local.** O Claude realiza a conversa e o Repesquisa executa as pesquisas no computador.
+
+## Requisitos
+
+- Python 3.11 ou superior.
+- [UV](https://docs.astral.sh/uv/) para instalar e executar o projeto.
+- [Claude Desktop](https://claude.com/download) para utilizar o assistente de IA.
+- MCP Inspector para testes e desenvolvimento.
+
+## Instalação
+
+### 1. Configurar os diretórios autorizados
+
+Edite o arquivo `config.json` e informe as pastas que o Repesquisa poderá percorrer.
+
+Exemplo no Windows:
+
+```json
+{
+  "roots": [
+    "C:/Users/SEU_USUARIO/Downloads",
+    "C:/Users/SEU_USUARIO/Documents",
+    "D:/Arquivos"
+  ]
+}
+```
+
+Substitua os exemplos pelos caminhos reais existentes no seu computador.
+
+O servidor restringe suas ferramentas aos diretórios configurados.
+
+### 2. Instalar as dependências
+
+Abra o terminal na pasta do projeto e execute:
+
+```powershell
+uv sync
+```
+
+Confirme que o UV está instalado:
+
+```powershell
+uv --version
+```
+
+## Configuração no Claude Desktop
+
+O Repesquisa funciona com o Claude Desktop como servidor MCP local.
+
+### 3.1. Localizar o arquivo de configuração
+
+No Windows, o arquivo fica em:
+
+```text
+%APPDATA%\Claude\claude_desktop_config.json
+```
+
+Para abri-lo pelo PowerShell:
+
+```powershell
+notepad "$env:APPDATA\Claude\claude_desktop_config.json"
+```
+
+Se o arquivo não existir, crie-o.
+
+### 3.2. Configurar o servidor Repesquisa
+
+Adicione a seguinte configuração, substituindo `SEU_USUARIO` pelo nome da sua pasta de usuário e ajustando o caminho da pasta do projeto:
+
+```json
+{
+  "mcpServers": {
+    "repesquisa": {
+      "command": "uv",
+      "args": [
+        "--directory",
+        "C:\\Users\\SEU_USUARIO\\Documents\\repesquisa-mcp",
+        "run",
+        "server.py"
+      ]
+    }
+  }
+}
+```
+
+**Importante:**
+
+- O caminho informado em `--directory` deve ser o caminho absoluto da pasta que contém `server.py` e `pyproject.toml`.
+- Se já houver outros servidores no `claude_desktop_config.json`, não apague as configurações existentes. Apenas acrescente a entrada `repesquisa` dentro de `mcpServers`.
+- Se o Claude não conseguir encontrar o comando `uv`, execute `where.exe uv` no PowerShell e utilize o caminho completo retornado no campo `command`.
+
+### 3.3. Reiniciar e verificar
+
+1. Salve o arquivo JSON.
+2. Encerre completamente o Claude Desktop.
+3. Abra novamente o Claude Desktop.
+4. Acesse Settings > Developer.
+5. Verifique se o Repesquisa aparece como servidor local conectado.
+6. Confira as ferramentas disponíveis na área de conectores do Claude.
+
+Se houver erro, consulte os logs de servidores MCP na área de desenvolvedor do Claude e verifique os caminhos configurados.
+
+Documentação de referência:
+
+- [Anthropic — Local MCP servers in Claude Desktop](https://support.anthropic.com/en/articles/10949351-getting-started-with-local-mcp-servers-on-claude-desktop)
+- [MCP — Connect local servers](https://modelcontextprotocol.io/docs/develop/connect-local-servers)
+
+## Testar com MCP Inspector
+
+Também é possível testar o servidor sem o Claude Desktop.
+
+Execute:
+
+```powershell
+uv run mcp dev server.py
+```
+
+O MCP Inspector abrirá uma interface para conectar ao servidor e testar suas ferramentas.
+
+Exemplo de parâmetros para `search_files`:
+
+```json
+{
+  "query": "relatório financeiro",
+  "extension": ".pdf",
+  "limit": 10
+}
+```
+
+## Ferramentas MCP disponíveis
+
+| Ferramenta | Descrição |
 |---|---|
-| `search_files` | Pesquisar arquivos por palavras-chave ou contexto. |
-| `get_file_info` | Consultar informações de um arquivo. |
-| `read_file` | Ler o conteúdo de um arquivo autorizado. |
-| `get_file_path` | Obter o caminho absoluto de um arquivo pelo nome exato ou caminho relativo. |
-| `get_folder_tree` | Exibir a estrutura de arquivos e subpastas dentro das raízes autorizadas. |
-| `refresh_index` | Atualizar o índice de arquivos. |
-| `list_indexed_roots` | Listar os diretórios autorizados e a contagem de arquivos indexados em cada um. |
+| `list_indexed_roots` | Lista os diretórios autorizados configurados. |
+| `refresh_index` | Indexa ou atualiza os metadados dos arquivos. |
+| `search_files` | Pesquisa por palavras no nome e no caminho. |
+| `get_file_info` | Consulta metadados de um arquivo autorizado. |
+| `get_folder_tree` | Mostra a estrutura de pastas de um diretório autorizado. |
 
-`get_file_path` recebe `name`. Para distinguir arquivos com o mesmo nome, informe o caminho relativo ou absoluto. `get_folder_tree` aceita `path`, `max_depth` (padrão 2) e `max_entries` (padrão 200). Sem `path`, a árvore parte de todas as raízes autorizadas.
+## Primeira pesquisa
 
-## Objetivo do projeto
+Depois de conectar o Repesquisa ao Claude Desktop:
 
-Criar uma maneira mais natural e eficiente de interagir com arquivos.
+1. Peça ao Claude para listar os diretórios autorizados.
+2. Solicite que execute `refresh_index` para criar ou atualizar o catálogo.
+3. Faça perguntas como:
 
-A proposta é eliminar a dependência de buscas manuais e permitir que qualquer usuário encontre documentos simplesmente descrevendo o que procura.
-
-**Descreva o que precisa encontrar sem o estresse de procurar.**
+- "Encontre arquivos com relatório financeiro no nome."
+- "Procure planilhas Excel na pasta Downloads."
+- "Mostre o caminho completo do arquivo encontrado."
+- "Mostre a estrutura da pasta Documentos."
 
 ## Segurança e privacidade
 
-- Acesso limitado aos diretórios previamente autorizados.
-- Respeito às permissões de acesso aos arquivos.
-- Validação dos caminhos antes de qualquer leitura.
-- Nenhuma execução automática de arquivos encontrados.
-- Possibilidade de restringir a leitura de conteúdo e trabalhar somente com metadados.
+- Configure somente diretórios que deseja disponibilizar para pesquisa.
+- O servidor verifica os caminhos contra os diretórios autorizados antes de acessar arquivos.
+- Não conceda acesso a pastas com dados sensíveis sem avaliar os riscos.
+- Não execute automaticamente arquivos encontrados.
+- Esta versão não envia o conteúdo dos arquivos para a OpenAI ou Anthropic.
+- O texto das perguntas e os resultados retornados ao Claude ficam sujeitos às políticas de dados e privacidade do serviço Claude utilizado.
 
-## Execução local
+## Limitações desta versão
 
-Por padrão, o servidor indexa `local-search-mcp\data`. Para autorizar outras pastas, defina `LOCAL_SEARCH_ROOTS` no PowerShell antes de iniciar o servidor. Separe múltiplas pastas com `;`.
+- A busca considera nome e caminho; ainda não pesquisa o conteúdo interno dos documentos.
+- Não abre, altera ou exclui arquivos.
+- Não segue links simbólicos.
+- Ignora arquivos e pastas ocultos.
+- A indexação é acionada pela ferramenta `refresh_index`; ainda não há monitoramento automático em segundo plano.
+- O servidor utiliza transporte local `stdio`. O Claude Desktop precisa estar instalado no mesmo computador para iniciar esse processo localmente.
 
-```powershell
-$env:LOCAL_SEARCH_ROOTS = 'C:\Documentos;D:\Projetos'
-.\local-search-mcp\.venv\Scripts\python.exe .\local-search-mcp\src\server.py
-```
-
-Sem `LOCAL_SEARCH_ROOTS`, execute apenas a segunda linha para usar a pasta padrão. A busca examina nomes, caminhos e conteúdo de arquivos de texto UTF-8 suportados; `read_file` retorna até 50.000 caracteres.
-
-## Busca textual e semântica
-
-A ferramenta MCP `search_files` aceita dois modos.
-
-- **Textual** (`mode: "text"`, padrão) busca palavras no nome, caminho e conteúdo. Use `extension` e `modified_from` ou `modified_to` para filtrar os resultados. As datas usam `YYYY-MM-DD` e os limites são inclusivos em UTC. Informe pelo menos um filtro para fazer uma busca textual sem palavras-chave.
-- **Semântico** (`mode: "semantic"`) compara o significado da consulta com trechos dos documentos por meio de embeddings da OpenAI. Cada arquivo aparece uma vez, com o trecho mais parecido e o valor `similarity`. Os mesmos filtros são aplicados antes da comparação. A consulta e os trechos dos arquivos que atendem aos filtros são enviados à API, que requer `OPENAI_API_KEY`.
-
-Exemplos de argumentos para `search_files`:
-
-```json
-{"query": "relatório", "extension": "txt", "modified_from": "2025-01-01"}
-```
-
-```json
-{"query": "como economizar combustível", "mode": "semantic", "extension": ".txt", "limit": 5}
-```
-
-A busca de conteúdo cobre os formatos de texto UTF-8 suportados, como TXT, Markdown e CSV, até 1 MB por arquivo. PDF, DOCX e outros binários podem ser encontrados no modo textual por nome, caminho e metadados.
-
-## Assistente com a API da OpenAI
-
-O assistente recebe uma pergunta, inicia o servidor MCP local via `stdio` e chama as ferramentas de arquivos solicitadas pelo modelo na Responses API. A pergunta e os resultados das ferramentas são enviados à OpenAI e podem incluir caminhos, metadados e trechos ou conteúdo de arquivos das pastas autorizadas.
-
-Na raiz do repositório, instale as dependências e informe a chave quando o PowerShell solicitar.
-
-```powershell
-.\local-search-mcp\.venv\Scripts\python.exe -m pip install -r .\local-search-mcp\requirements.txt
-$apiKey = Read-Host 'Chave da API da OpenAI' -AsSecureString
-$env:OPENAI_API_KEY = ([System.Net.NetworkCredential]::new('', $apiKey)).Password
-$env:LOCAL_SEARCH_ROOTS = 'C:\Documentos'
-.\local-search-mcp\.venv\Scripts\python.exe .\local-search-mcp\src\assistant.py 'Encontre os arquivos sobre infraestrutura.'
-```
-
-Ajuste `LOCAL_SEARCH_ROOTS` para uma pasta que você queira pesquisar. O modelo padrão é `gpt-5-mini`. Para escolher outro modelo com suporte a chamadas de ferramentas, use `--model` ou defina `OPENAI_MODEL`. Se `LOCAL_SEARCH_POSTGRES_DSN` estiver configurada, o assistente também usa o índice PostgreSQL.
-
-Para executar a suíte com a API simulada e o servidor MCP real, rode o comando abaixo. Os testes dispensam uma chave da OpenAI.
-
-```powershell
-.\local-search-mcp\.venv\Scripts\python.exe -B -m unittest discover -s local-search-mcp/tests -v
-```
-
-## PostgreSQL
-
-O PostgreSQL armazena os metadados do índice. O servidor MCP continua lendo o conteúdo dos arquivos diretamente nas pastas autorizadas. Sem `LOCAL_SEARCH_POSTGRES_DSN`, o índice fica em memória.
-
-Na raiz do repositório, instale as dependências e aplique o esquema em um banco PostgreSQL existente. O exemplo usa um banco chamado `local_search_mcp` e um usuário com permissão para criar o esquema e consultar e atualizar a tabela.
-
-```powershell
-.\local-search-mcp\.venv\Scripts\python.exe -m pip install -r .\local-search-mcp\requirements.txt
-$env:LOCAL_SEARCH_POSTGRES_DSN = 'host=localhost port=5432 dbname=local_search_mcp user=local_search_mcp'
-psql --dbname="$env:LOCAL_SEARCH_POSTGRES_DSN" -v ON_ERROR_STOP=1 -f .\local-search-mcp\sql\schema.sql
-.\local-search-mcp\.venv\Scripts\python.exe .\local-search-mcp\src\server.py
-```
-
-Se `psql` não estiver no PATH do Windows, use o caminho para `psql.exe` na pasta `bin` da instalação do PostgreSQL. Se a conexão exigir senha, configure o arquivo de senhas do PostgreSQL (`pgpass.conf` no Windows) para que o cliente MCP possa iniciar o servidor sem uma solicitação interativa. Se o cliente iniciar o processo diretamente, configure `LOCAL_SEARCH_POSTGRES_DSN` no ambiente desse processo.
-
-O servidor percorre recursivamente as pastas autorizadas e registra o caminho absoluto, o nome, a extensão, o tamanho em bytes e a data de modificação em UTC na tabela `local_search.indexed_files`. As ferramentas `search_files` e `list_indexed_roots` consultam os metadados do catálogo no banco.
-
-O catálogo é sincronizado na inicialização e a cada chamada de `refresh_index`. A ferramenta retorna os caminhos completos em `changes.new`, `changes.modified` e `changes.removed`, comparando a varredura com o último estado do catálogo. Alterações são detectadas pelos metadados, como tamanho e data de modificação. O PostgreSQL grava as inclusões, atualizações e remoções na mesma transação.
-
-## Tecnologias
-
-- Model Context Protocol (MCP)
-- Indexação e catalogação de arquivos
-- Busca textual e, opcionalmente, busca semântica
-- Integração com assistentes de Inteligência Artificial
